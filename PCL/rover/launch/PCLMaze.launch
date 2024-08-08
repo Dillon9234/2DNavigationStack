@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+  <!-- Robot pose -->
+  <arg name="x" default="0"/>
+  <arg name="y" default="0"/>
+  <arg name="z" default="0"/>
+  <arg name="roll" default="0"/>
+  <arg name="pitch" default="0"/>
+  <arg name="yaw" default="0"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find rover)/urdf/rover.xacro'" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  <!-- World File -->
+  <arg name="world_file" default="$(find rover)/worlds/newMaze.world"/>
+
+  <!-- Launch Gazebo World -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="use_sim_time" value="true"/>
+    <arg name="debug" value="false"/>
+    <arg name="gui" value="true" />
+    <arg name="world_name" value="$(arg world_file)"/>
+  </include>
+
+  <!-- Spawn My Robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
+        args="-urdf -param robot_description -model rover
+              -x $(arg x) -y $(arg y) -z $(arg z)
+              -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)"/>
+
+  <!-- Launch RViz -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find rover)/default.rviz"/>
+
+  <node pkg="rover" type="PCL" name="PCL" output="screen" launch-prefix="gnome-terminal --command"/>
+  <node pkg="rover" type="obstacle_avoidance_PCL" name="obstacle_avoidance_PCL" output="screen" launch-prefix="gnome-terminal --command"/>
+  <node pkg="rover" type="navigation" name="navigation" output="screen" launch-prefix="gnome-terminal --command"/>
+</launch>
